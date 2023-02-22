@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 VERSION = '0.0.0'
-DESCRIPTION = 'Quantifies certain evironmental factors that affect cycling'
+DESCRIPTION = 'Quantifies certain environmental factors that affect cycling'
 LONG_DESCRIPTION = """
 This package is intended to be used by researchers to quantify some environmental factors that affect cycling for a given region.
 """

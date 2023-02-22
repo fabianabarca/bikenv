@@ -23,7 +23,7 @@ extensions = [
     'sphinx.ext.viewcode',  # Add links to the Python source code
     'sphinx.ext.napoleon',  # Support for NumPy and Google style docstrings
     'sphinx.ext.mathjax',   # Render math
-    'sphinx_book_theme',    # Theme
+    'sphinx_rtd_theme',    # Theme
 ]
 
 # LaTeX math
@@ -42,5 +42,5 @@ language = 'Python'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_title = 'bikenv: Environmental factors that affect cycling'
-html_theme = 'sphinx_book_theme'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']

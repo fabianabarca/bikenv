@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'bikenv'
 copyright = '2023, Fabián Abarca'
 author = 'Fabián Abarca'
-release = 'v0.0.0'
+release = 'v0.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

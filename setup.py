@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.0.0'
+VERSION = '0.0.1'
 DESCRIPTION = 'Quantifies certain environmental factors that affect cycling'
 LONG_DESCRIPTION = """
-This package is intended to be used by researchers to quantify some environmental factors that affect cycling for a given region.
+bikenv (biking environment) is intended to be used by researchers to quantify some environmental factors that affect cycling for a given region.
 """
 
 
@@ -13,13 +13,15 @@ setup(
     version=VERSION,
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    author='Fabián Abarca',
+    author='Fabián Abarca & Jose Daniel Marín',
     license='MIT',
     install_requires=[
         'numpy',
         'scipy',
         'pandas',
-        'requests',
+        'geopandas',
+        'osmnx',
+        'networkx',
     ],
     classifiers=[
         'Development Status :: 1 - Planning',

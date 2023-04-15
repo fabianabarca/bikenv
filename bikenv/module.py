@@ -1,26 +1,22 @@
-import numpy as np
+import osmnx as ox
+import networkx as nx
 
 
-def this_function(name):
-    """This describes what the function does.
+class Region(boundary):
+    """Class that represents a region in the world."""
 
-    This is a longer description of what the function does. It can be multiple lines long.
+    def _init_(self):
+        self.earth_radius = 5.98e6
+        self.road_network = self.get_road_network(boundary)
 
-    Parameters
-    ----------
-    name : string
-        The person to greet.
+    def get_road_network(self):
+        # Calculate the road network
+        return road_network
 
-    Returns
-    -------
-    greeting : string
-        A greeting with the person's name.
+    def get_index_altitude(self):
+        # Calculate the index
+        return index
 
-    Examples
-    --------
-    >>> print(package.module.this_function('Alice'))
-    Hello Alice!
-    """
-    greeting = f'Hello {name}!'
-
-    return greeting
+    def get_index_distance(self):
+        # Calculate the index
+        return index

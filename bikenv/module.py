@@ -1,22 +1,58 @@
+"""Hola."""
+
 import osmnx as ox
 import networkx as nx
 
 
-class Region(boundary):
-    """Class that represents a region in the world."""
+def get_region(name, network_type="drive"):
+    """Get the region from OSM as a graph.
 
-    def _init_(self):
-        self.earth_radius = 5.98e6
-        self.road_network = self.get_road_network(boundary)
+    Parameters
+    ----------
+    region : string
+        The name of the region to get from OSM
+    network_type : string
+        The type of network to get from OSM. Default is 'drive'
 
-    def get_road_network(self):
-        # Calculate the road network
-        return road_network
+    Returns
+    -------
+    road_network : networkx multidigraph
+    """
+    road_network = "Hola"
+    return road_network
 
-    def get_index_altitude(self):
-        # Calculate the index
-        return index
 
-    def get_index_distance(self):
-        # Calculate the index
-        return index
+def altitude_index(G, google_key):
+    """Calculate the index of a graph based on the altitude of the nodes.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+        The graph to calculate the index
+    google_key : string
+        The key to use the Google Elevation API
+
+    Returns
+    -------
+    index : float
+        The index of the graph
+    """
+    index = 24.5
+    return index
+
+
+def distance_index(G):
+    """Calculate the index of a graph based on the distance of the nodes.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+        The graph to calculate the index
+
+    Returns
+    -------
+    index : float
+    
+    """
+    index = 1849
+    return index

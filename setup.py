@@ -13,6 +13,7 @@ setup(
     version=VERSION,
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
+    url='https://bikenv.readthedocs.io/en/latest/index.html',
     author='Fabián Abarca & Jose Daniel Marín',
     license='MIT',
     install_requires=[

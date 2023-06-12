@@ -38,6 +38,7 @@ def altitude_index(G, google_key):
         The index of the graph
     """
     index = 24.5
+    index = index/2
     return index
 
 

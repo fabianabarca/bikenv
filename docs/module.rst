@@ -11,17 +11,19 @@ Use Example
    import geopandas
    import bikenv
 
-   # Read the shapefile of the boundary of San Jose
-   sanjose_boundary = geopandas.read_file('sanjose_boundary.shp')
+   # Create the network multidigraph of the city
+   G = bikenv.get_region(San José, drive) 
 
-   # Create a Region object
-   sanjose = bikenv.Region(sanjose_boundary)
+   #Calculate the index of altitude
+   # Obtain the altitud data.
+   alturas_equiv = bikenv.altitude_index(G, google_key)
 
-   # Get the altitude index
-   alt_index = sanjose.get_index_altitude()
+   #Obtain the stats of the altitude
+   variances = bikenv.stats(alturas_equiv)
 
-   # Get the distance index
-   dis_index = sanjose.get_index_distance()
+   #Calculate the index of distance
+   second_index = bikenv.distance_index(G)
+
 
 .. important::
    The documentation is under construction.

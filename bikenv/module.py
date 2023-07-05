@@ -1,8 +1,9 @@
-import osmnx as ox
-import networkx as nx
-from scipy.stats import skew
-from scipy.stats import kurtosis
+"""
+User Reference.
 
+==========
+This guide describes the use of all the functions used in the package for reference purposes. All these functions can be accessed through bikenv.module_name.function_name(). This package uses different libraries that need to be installed before using it to avoid errors.
+"""
 
 def get_region(text: str, networktype: str):
     """Get the region from OSM as a graph.
@@ -58,9 +59,9 @@ def altitude_index(G, google_key: str):
     return alturas_equiv
 
 def stats(alturas_equiv):
-
-    """ Obtain important stats form de data provided.
-
+    """
+    Obtain important stats form de data provided.
+    
     Parameters
     ----------
     alturas_equiv : one-dimensional data structure
@@ -72,7 +73,6 @@ def stats(alturas_equiv):
     sesgo : skew of alturas_equiv
     kurt : kurtosis of alturas_equiv
     """
-
     print("Los datos obtenidos de la elevación de la ciudad son: \n")
     
     variances = np.var(y) #Varianza
@@ -90,8 +90,8 @@ def stats(alturas_equiv):
     return variances, std, sesgo, kurt    
 
 def hist(list_data):
-
-    """ Obtain important stats form de data provided.
+    """
+    Obtain important stats form de data provided.
 
     Parameters
     ----------
@@ -101,7 +101,6 @@ def hist(list_data):
     -------
     graph : histograms of all data lists in the same graph.
     """
-
     num_bins = 50  # Número de divisiones del histograma
     for i in x:
         plt.hist(i, bins=num_bins, edgecolor='black', density=True)
@@ -118,10 +117,21 @@ def hist(list_data):
 #--------------------------
 #Distance_index
 def distance_index(G):
+    """
+    Obtain the index related to distances.
 
+    Parameters
+    ----------
+    G : networkx multidigraph
+    The graph to calculate the index
+
+    Returns
+    -------
+    distanceindex : value of the index.
+    """
     def shortestroad_distance(G):
-
-        """ Obtain a matrix with all the distances on road in meters between all nodes of G.
+        """
+        Obtain a matrix with all the distances on road in meters between all nodes of G.
 
         Parameters
         ----------
@@ -161,9 +171,10 @@ def distance_index(G):
         road_matrix = np.array(shortestdistance)
 
         return road_matrix
-
+    
     def shortestcrow_distance(G):
-        """ Obtain a matrix with all the distances in straight line in meters between all nodes of G.
+        """
+        Obtain a matrix with all the distances in straight line in meters between all nodes of G.
 
         Parameters
         ----------
@@ -204,7 +215,8 @@ def distance_index(G):
         return crow_matrix
 
     def divide_matrix(matrix1, matrix2):
-        """ Obtain matrix, dividen each value from matrix1 with the corresponding value from matrix2.
+        """
+        Obtain matrix, dividen each value from matrix1 with the corresponding value from matrix2.
 
         Parameters
         ----------
@@ -220,7 +232,8 @@ def distance_index(G):
         return dist_result
 
     def row_mean(matrixreslt):
-        """ Calculate the mean of each row in a matrix.
+        """
+        Calculate the mean of each row in a matrix.
 
         Parameters
         ----------
@@ -237,7 +250,8 @@ def distance_index(G):
         return average_matrix
 
     def mean_of_means(means): 
-        """ Calculate the mean of each value in a list.
+        """
+        Calculate the mean of each value in a list.
 
         Parameters
         ----------

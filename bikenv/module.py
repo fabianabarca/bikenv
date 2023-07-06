@@ -143,7 +143,7 @@ def distance_index(G):
         shortestdistance : list of lists matrix. 
         Distances between all nodes. Each list is de distances form one node to all nodes.
         """
-        gdf_nodes, gdf_edges = ox.graph_to_gdfs(G)
+        gdf_nodes = ox.graph_to_gdfs(G)[0]
         num_filas = len(gdf_nodes)
         shortestdistance = []
 
@@ -160,8 +160,7 @@ def distance_index(G):
                 dest = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
                 route = ox.shortest_path(G, orig, dest, weight="travel_time") #Se obtiene la ruta para ese orig y dest
                 if route is not None: #Si la ruta existe se obtiene la distancia de esa ruta
-                    edge_lengths = ox.utils_graph.get_route_edge_attributes(G, route, "length")
-                    dist = round(sum(edge_lengths)) #Se redondea para obtener número de metros
+                    dist = round(sum(ox.utils_graph.get_route_edge_attributes(G, route, "length"))) #Se redondea para obtener número de metros
                     shortestdistance1.append(dist)
                 else: 
                     break
@@ -186,7 +185,7 @@ def distance_index(G):
         shortestcrowdistance : matrix. 
         Distances between all nodes. Each list is de distances form one node to all nodes in a straight line.
         """
-        gdf_nodes, gdf_edges = ox.graph_to_gdfs(G)
+        gdf_nodes = ox.graph_to_gdfs(G)[0]
         num_filas = len(gdf_nodes)
         shortestcrowdistance = []
 
@@ -273,4 +272,3 @@ def distance_index(G):
     second_index = mean_of_means(average_matrix)
 
     return second_index
-    

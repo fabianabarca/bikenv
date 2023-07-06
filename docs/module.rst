@@ -1,5 +1,5 @@
 Getting Started
-==========
+================
 
 This is the description of the module.
 

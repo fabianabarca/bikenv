@@ -10,7 +10,7 @@ bikenv: Environmental factors affecting bicycle ridership
    This package is under development.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
 
    about

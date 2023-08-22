@@ -5,26 +5,45 @@ User Reference.
 This guide describes the use of all the functions used in the package for reference purposes. All these functions can be accessed through bikenv.module_name.function_name(). This package uses different libraries that need to be installed before using it to avoid errors.
 """
 
-def get_region(text: str, networktype: str):
+import numpy as np
+from scipy import stats
+import osmnx as ox
+import matplotlib.pyplot as plt
+
+
+# TODO: class Region with attributes: name, graph, altitude_index, distance_index, and methods: normalized_elevation_stats, normalized_elevation_hist
+
+class Region:
+    def __init__(self, name: str, google_key: str):
+        self.name = name
+        self.graph = get_region(name)
+        self.altitude_index = altitude_index(self.graph, google_key)
+        self.distance_index = distance_index(self.graph)
+
+
+def get_region(text: str):
     """Get the region from OSM as a graph.
 
     Parameters
     ----------
     region : string
         The name of the region to get from OSM
-    network_type : string
-        The type of network to get from OSM. Default is 'drive'
 
     Returns
     -------
     G : networkx multidigraph
     """
-    G = ox.graph_from_place(text, network_type=networktype)
-    fig, ax = ox.plot_graph(G)  # Para graficar, se puede modificar
-    return G
+    try:
+        G = ox.graph_from_place(text, network_type="drive")
+        _, _ = ox.plot_graph(G)
+        return G
+    except:
+        print(f"OSM could not find '{text}'.")
+        print("Please try again with a different region.")
+    
 
 def altitude_index(G, google_key: str):
-    """Calculate the index of a graph based on the altitude of the nodes.
+    """Calculate the altitude index of a graph based on the altitude of the nodes.
 
     Parameters
     ----------
@@ -35,7 +54,7 @@ def altitude_index(G, google_key: str):
 
     Returns
     -------
-    alturas_equiv : one-dimensional data structure
+    normalized_elevation : one-dimensional data structure
         The elevation data prepared to be compared and analized
     """
     # Obtain the elevation of all nodes
@@ -43,55 +62,59 @@ def altitude_index(G, google_key: str):
         G = ox.elevation.add_node_elevations_google(G, api_key=google_key)
         G = ox.elevation.add_edge_grades(G)
         nc = ox.plot.get_node_colors_by_attr(G, "elevation", cmap="plasma")
-        fig, ax = ox.plot_graph(
+        _, _ = ox.plot_graph(
             G, node_color=nc, node_size=20, edge_linewidth=2, edge_color="#333"
         )
     except ImportError:
         print("You need a google_elevation_api_key to run this cell.")
 
     gdf = ox.graph_to_gdfs(G)
-    ele = gdf[0]["elevation"]
-
-    promedio = np.mean(ele)
-
-    alturas_equiv = ele - promedio
-
-    return alturas_equiv
-
-def stats(alturas_equiv):
-    """
-    Obtain important stats form de data provided.
     
+    # Get and normalize the elevation data
+    elevation = gdf[0]["elevation"]
+    elevation_mean = np.mean(elevation)
+    normalized_elevation = elevation - elevation_mean
+
+    return normalized_elevation
+
+
+def normalized_elevation_stats(normalized_elevation):
+    """
+    Obtain basic stats from the data provided.
+
     Parameters
     ----------
-    alturas_equiv : one-dimensional data structure
+    normalized_elevation : one-dimensional data structure
 
     Returns
     -------
-    variances : variance of alturas_equiv
-    std : std of alturas_equiv
-    sesgo : skew of alturas_equiv
-    kurt : kurtosis of alturas_equiv
+    variances : variance of normalized elevation data
+    std : standard deviation of normalized elevation data
+    sesgo : skewness of normalized elevation data
+    kurt : kurtosis of normalized elevation data
     """
     print("Los datos obtenidos de la elevación de la ciudad son: \n")
-    
-    variances = np.var(y) #Varianza
-    print("La varianza es:",variances)
-    
-    std = np.std(y)
-    print("La desviación estandar es:",std)
-    
-    sesgo = skew(y)
-    print("El sesgo es:",sesgo)
 
-    kurt = kurtosis(y)
-    print("La kurtosis es:",kurt)
+    var = np.var(normalized_elevation)  # Varianza
+    print("La varianza es:", var)
 
-    return variances, std, sesgo, kurt    
+    std = np.std(normalized_elevation)
+    print("La desviación estandar es:", std)
 
-def hist(list_data):
+    skew = stats.skew(normalized_elevation)
+    print("El sesgo es:", skew)
+
+    kurt = stats.kurtosis(normalized_elevation)
+    print("La kurtosis es:", kurt)
+
+    return var, std, skew, kurt
+
+
+def normalized_elevation_hist(region_data):
     """
-    Obtain important stats form de data provided.
+    Histogram to compare normalized elevation of two or more regions.
+
+    TODO: Add a legend to the graph.
 
     Parameters
     ----------
@@ -101,34 +124,31 @@ def hist(list_data):
     -------
     graph : histograms of all data lists in the same graph.
     """
-    num_bins = 50  # Número de divisiones del histograma
-    for i in x:
-        plt.hist(i, bins=num_bins, edgecolor='black', density=True)
-        
+    num_bins = 50
+    
+    for i in region_data:
+        plt.hist(i, bins=num_bins, edgecolor="black", density=True)
 
-    # Configurar etiquetas y título
-    plt.xlabel('Diferencia con respecto a la altitud media (m)')
-    plt.ylabel('Densidad')
-    plt.title('Histograma de altitud de nodos de una ciudad')
-
-    # Mostrar el histograma
+    plt.xlabel("Difference with respect to mean altitude (m)")
+    plt.ylabel("Density")
+    plt.title("Histogram to compare normalized elevation of two or more regions.")
     plt.show()
 
-#--------------------------
-#Distance_index
+
 def distance_index(G):
     """
-    Obtain the index related to distances.
+    Get the index related to distances.
 
     Parameters
     ----------
     G : networkx multidigraph
-    The graph to calculate the index
+        The graph to calculate the index
 
     Returns
     -------
     distanceindex : value of the index.
     """
+
     def shortestroad_distance(G):
         """
         Obtain a matrix with all the distances on road in meters between all nodes of G.
@@ -140,37 +160,47 @@ def distance_index(G):
 
         Returns
         -------
-        shortestdistance : list of lists matrix. 
+        shortestdistance : list of lists matrix.
         Distances between all nodes. Each list is de distances form one node to all nodes.
         """
         gdf_nodes = ox.graph_to_gdfs(G)[0]
         num_filas = len(gdf_nodes)
         shortestdistance = []
 
-        for i in range(num_filas): #Se obtiene el nodo de origen
+        for i in range(num_filas):  # Se obtiene el nodo de origen
             data = gdf_nodes.iloc[i]
             longitud = data["y"]
             latitud = data["x"]
             orig = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
             shortestdistance1 = []
-            for j in range(num_filas): #Se obtiene el nodo destino, que serían todos los nodos
+            for j in range(
+                num_filas
+            ):  # Se obtiene el nodo destino, que serían todos los nodos
                 data = gdf_nodes.iloc[j]
                 longitud = data["y"]
                 latitud = data["x"]
                 dest = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
-                route = ox.shortest_path(G, orig, dest, weight="travel_time") #Se obtiene la ruta para ese orig y dest
-                if route is not None: #Si la ruta existe se obtiene la distancia de esa ruta
-                    dist = round(sum(ox.utils_graph.get_route_edge_attributes(G, route, "length"))) #Se redondea para obtener número de metros
+                route = ox.shortest_path(
+                    G, orig, dest, weight="travel_time"
+                )  # Se obtiene la ruta para ese orig y dest
+                if (
+                    route is not None
+                ):  # Si la ruta existe se obtiene la distancia de esa ruta
+                    dist = round(
+                        sum(
+                            ox.utils_graph.get_route_edge_attributes(G, route, "length")
+                        )
+                    )  # Se redondea para obtener número de metros
                     shortestdistance1.append(dist)
-                else: 
+                else:
                     break
             shortestdistance.append(shortestdistance1)
-                
-        #print("distancias entre todos los nodos por calles: \n", shortestdistance)
+
+        # print("distancias entre todos los nodos por calles: \n", shortestdistance)
         road_matrix = np.array(shortestdistance)
 
         return road_matrix
-    
+
     def shortestcrow_distance(G):
         """
         Obtain a matrix with all the distances in straight line in meters between all nodes of G.
@@ -182,34 +212,37 @@ def distance_index(G):
 
         Returns
         -------
-        shortestcrowdistance : matrix. 
+        shortestcrowdistance : matrix.
         Distances between all nodes. Each list is de distances form one node to all nodes in a straight line.
         """
         gdf_nodes = ox.graph_to_gdfs(G)[0]
         num_filas = len(gdf_nodes)
         shortestcrowdistance = []
 
-        for i in range(num_filas): #Se obtiene el nodo de origen
+        for i in range(num_filas):  # Se obtiene el nodo de origen
             data = gdf_nodes.iloc[i]
             orig_y = data["y"]
             orig_x = data["x"]
-            #print(orig_x)
+            # print(orig_x)
             orig = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
             shortestcrowdistance1 = []
-            for j in range(num_filas): #Se obtiene el nodo destino, que serían todos los nodos
+            for j in range(
+                num_filas
+            ):  # Se obtiene el nodo destino, que serían todos los nodos
                 data = gdf_nodes.iloc[j]
                 dest_y = data["y"]
                 dest_x = data["x"]
                 dest = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
-                dist2 = round(ox.distance.great_circle_vec(orig_y, orig_x, dest_y, dest_x))
-                #print(dist2)
+                dist2 = round(
+                    ox.distance.great_circle_vec(orig_y, orig_x, dest_y, dest_x)
+                )
+                # print(dist2)
                 shortestcrowdistance1.append(dist2)
 
             shortestcrowdistance.append(shortestcrowdistance1)
 
-        #print("distancia en linea recta entre todos los nodos: \n", shortestcrowdistance)
+        # print("distancia en linea recta entre todos los nodos: \n", shortestcrowdistance)
         crow_matrix = np.array(shortestcrowdistance)
-
 
         return crow_matrix
 
@@ -224,9 +257,9 @@ def distance_index(G):
 
         Returns
         -------
-        dist_result : matrix with the results of the division 
+        dist_result : matrix with the results of the division
         """
-        dist_result = np.nan_to_num(np.divide(matrix1, matrix2, where=matrix2!=0)) 
+        dist_result = np.nan_to_num(np.divide(matrix1, matrix2, where=matrix2 != 0))
 
         return dist_result
 
@@ -244,11 +277,13 @@ def distance_index(G):
         avarage_matrix : list with the means of each row.
         """
         row_averages = np.mean(dist_result, axis=1)
-        average_matrix = np.array([row_averages]).T #Promedios de cada una de las filas
+        average_matrix = np.array(
+            [row_averages]
+        ).T  # Promedios de cada una de las filas
 
         return average_matrix
 
-    def mean_of_means(means): 
+    def mean_of_means(means):
         """
         Calculate the mean of each value in a list.
 
@@ -261,10 +296,10 @@ def distance_index(G):
         -------
         secondindex : Mean of all values in a list.
         """
-        secondindex = np.mean(average_matrix) #Obtención del segundo índice
+        secondindex = np.mean(average_matrix)  # Obtención del segundo índice
 
         return secondindex
-    
+
     road_matrix = shortestroad_distance(G)
     crow_matrix = shortestcrow_distance(G)
     dist_result = divide_matrix(road_matrix, crow_matrix)

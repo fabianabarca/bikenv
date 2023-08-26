@@ -13,6 +13,7 @@ cache/
 __pycache__/
 *.py[cod]
 *$py.class
+tests/keys.py
 
 # C extensions
 *.so

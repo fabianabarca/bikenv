@@ -1,4 +1,7 @@
 import bikenv
+import keys
+
+GOOGLE_API_KEY = keys.GOOGLE_API_KEY
 
 print("This is an example of how to use the package.")
 
@@ -8,7 +11,7 @@ G = bikenv.get_region("Cinco Esquinas de Tibás, San José, Costa Rica")
 print("This is the graph of the region of interest.")
 
 # Get the altitude index of the region of interest
-normalized_elevation = bikenv.altitude_index(G, google_key="AIzaSyB2WP2FoMe4DRz20FsGGi51opPlfjcm4KM")
+normalized_elevation = bikenv.altitude_index(G, google_key=GOOGLE_API_KEY)
 
 print("This is the altitude index of the region of interest.")
 

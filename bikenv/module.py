@@ -212,7 +212,6 @@ def distance_index(G):
 
         # print("distancias entre todos los nodos por calles: \n", shortestdistance)
         road_matrix = np.array(shortestdistance)
-        print(road_matrix.shape)
 
         return road_matrix
 
@@ -258,7 +257,7 @@ def distance_index(G):
 
         # print("distancia en linea recta entre todos los nodos: \n", shortestcrowdistance)
         crow_matrix = np.array(shortestcrowdistance)
-        print(crow_matrix.shape)
+
         return crow_matrix
 
     def divide_matrix(matrix1, matrix2):

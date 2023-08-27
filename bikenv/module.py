@@ -181,23 +181,38 @@ def distance_index(G):
                 latitud = data["x"]
                 dest = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
                 route = ox.shortest_path(
-                    G, orig, dest, weight="travel_time"
+                    G, orig, dest
                 )  # Se obtiene la ruta para ese orig y dest
+
+                #If origin and destination are the same node then route is set to None
+                if orig == dest:
+                    route = None
+                
+                
                 if (
                     route is not None
                 ):  # Si la ruta existe se obtiene la distancia de esa ruta
+                    
                     dist = round(
                         sum(
-                            ox.utils_graph.get_route_edge_attributes(G, route, "length")
+                            ox.utils_graph.route_to_gdf(G, route, "length")["length"]
                         )
                     )  # Se redondea para obtener número de metros
                     shortestdistance1.append(dist)
+                    #_, _ = ox.plot_graph_route(G, route, route_color="y", route_linewidth=6, node_size=0)
                 else:
-                    break
+                    #If route is None zero is appended
+                    selfdistance = 0
+                    shortestdistance1.append(selfdistance)
+                    pass
+                #print(shortestdistance1)
             shortestdistance.append(shortestdistance1)
+        
+        #print(shortestdistance.tail())
 
         # print("distancias entre todos los nodos por calles: \n", shortestdistance)
         road_matrix = np.array(shortestdistance)
+        print(road_matrix.shape)
 
         return road_matrix
 
@@ -224,7 +239,7 @@ def distance_index(G):
             orig_y = data["y"]
             orig_x = data["x"]
             # print(orig_x)
-            orig = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
+            orig = ox.distance.nearest_nodes(G, X=orig_x, Y=orig_y)
             shortestcrowdistance1 = []
             for j in range(
                 num_filas
@@ -232,7 +247,7 @@ def distance_index(G):
                 data = gdf_nodes.iloc[j]
                 dest_y = data["y"]
                 dest_x = data["x"]
-                dest = ox.distance.nearest_nodes(G, X=latitud, Y=longitud)
+                dest = ox.distance.nearest_nodes(G, X=dest_y, Y=dest_x)
                 dist2 = round(
                     ox.distance.great_circle_vec(orig_y, orig_x, dest_y, dest_x)
                 )
@@ -243,7 +258,7 @@ def distance_index(G):
 
         # print("distancia en linea recta entre todos los nodos: \n", shortestcrowdistance)
         crow_matrix = np.array(shortestcrowdistance)
-
+        print(crow_matrix.shape)
         return crow_matrix
 
     def divide_matrix(matrix1, matrix2):

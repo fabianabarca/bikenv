@@ -24,6 +24,11 @@ print(stats)
 # Plot the histogram of the altitude index
 bikenv.normalized_elevation_hist(normalized_elevation)
 
+# Get the distance_index
+distance_index = bikenv.distance_index(G)
+print("This is the distance index")
+print(distance_index)
+
 
 # With OOP:
 

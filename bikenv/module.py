@@ -13,32 +13,15 @@ import matplotlib.pyplot as plt
 
 # TODO: class Region with attributes: name, graph, altitude_index, distance_index, and methods: normalized_elevation_stats, normalized_elevation_hist
 
+
 class Region:
     def __init__(self, name: str, google_key: str):
         self.name = name
-        self.google_key = google_key
-        self.G = self.get_region()
-        self.normalized_elevation = self.altitude_index()
-        self.distance_index = self.distance_index_func()
-
-    def get_region(self):
-        """Get the region from OSM as a graph.
-
-        Parameters
-        ----------
-        region : string
-            The name of the region to get from OSM
-
-        Returns
-        -------
-        G : networkx multidigraph
-        """
-        try:
-            G = ox.graph_from_place(self.name, network_type="drive")
-            return G
-        except:
-            print(f"OSM could not find '{self.name}'.")
-            print("Please try again with a different region.")
+        self.google_api_key = google_key
+        self.G = self._get_region()
+        self.altitude_index = self._altitude_index()
+        self.distance_index = self._distance_index()
+        self.normalized_elevations, self.elevation_mean = self._normalize_elevation()
 
     def plot_region(self):
         """Plot the region from OSM as a graph.
@@ -46,7 +29,7 @@ class Region:
         Parameters
         ----------
         self.G : networkx multidigraph
-            The region networkx multidigraph 
+            The region networkx multidigraph
 
         Returns
         -------
@@ -58,47 +41,12 @@ class Region:
             print(f"OSM could not find '{self.name}' graph.")
             print("Please try again with a different region.")
 
-    def altitude_index(self):
-        """Calculate the altitude index of a graph based on the altitude of the nodes.
-
-        Parameters
-        ----------
-        G : networkx multidigraph
-            The graph to calculate the index
-        google_key : string
-            The key to use the Google Elevation API
-
-        Returns
-        -------
-        normalized_elevation : one-dimensional data structure
-            The elevation data prepared to be compared and analized
-        """
-        # Obtain the elevation of all nodes
-        try:
-            self.G_elevation = ox.elevation.add_node_elevations_google(
-                self.G, api_key=self.google_key)
-            self.G_elevation = ox.elevation.add_edge_grades(self.G)
-            self.nc = ox.plot.get_node_colors_by_attr(
-                self.G, "elevation", cmap="plasma")
-
-        except ImportError:
-            print("You need a google_elevation_api_key to run this cell.")
-
-        gdf = ox.graph_to_gdfs(self.G)
-
-        # Get and normalize the elevation data
-        elevation = gdf[0]["elevation"]
-        elevation_mean = np.mean(elevation)
-        normalized_elevation = elevation - elevation_mean
-
-        return normalized_elevation
-
-    def plot_region_altitude(self):
+    def plot_elevation(self):
         """Plot the region from OSM as a graph.
 
         Parameters
         ----------
-        self.G_elevation : networkx multidigraph 
+        self.G_elevation : networkx multidigraph
             The region networkx multidigraph with elevation nodes and edges
         self.nc : node colors
             The color for each node
@@ -109,13 +57,17 @@ class Region:
         """
         try:
             _, _ = ox.plot_graph(
-                self.G_elevation, node_color=self.nc, node_size=20, edge_linewidth=2, edge_color="#333"
+                self.G_elevation,
+                node_color=self.nc,
+                node_size=20,
+                edge_linewidth=2,
+                edge_color="#333",
             )
         except:
             print(f"OSM could not find '{self.name}' elevation graph.")
             print("Please try again with a different region.")
 
-    def normalized_elevation_stats(self):
+    def elevation_stats(self):
         """
         Obtain basic stats from the data provided.
 
@@ -132,19 +84,22 @@ class Region:
         """
         print("Los datos obtenidos de la elevación de la ciudad son: \n")
 
-        var = np.var(self.normalized_elevation)  # Varianza
+        mean = self.elevation_mean
+        print("La media es:", mean)
+
+        var = np.var(self.normalized_elevations)  # Varianza
         print("La varianza es:", var)
 
-        std = np.std(self.normalized_elevation)
+        std = np.std(self.normalized_elevations)
         print("La desviación estandar es:", std)
 
-        skew = stats.skew(self.normalized_elevation)
+        skew = stats.skew(self.normalized_elevations)
         print("El sesgo es:", skew)
 
-        kurt = stats.kurtosis(self.normalized_elevation)
+        kurt = stats.kurtosis(self.normalized_elevations)
         print("La kurtosis es:", kurt)
 
-        return var, std, skew, kurt
+        return mean, var, std, skew, kurt
 
     def normalized_elevation_hist(self):
         """
@@ -167,11 +122,72 @@ class Region:
 
         plt.xlabel("Difference with respect to mean altitude (m)")
         plt.ylabel("Density")
-        plt.title(
-            "Histogram to compare normalized elevation of two or more regions.")
+        plt.title("Histogram to compare normalized elevation of two or more regions.")
         plt.show()
 
-    def distance_index_func(self):
+    def _get_region(self):
+        """Get the region from OSM as a graph.
+
+        TODO: How to limit the region, for example, to a circular area of N km radius around the center of the region. This is to avoid getting a graph that is too big. Search for other options to "trim" the graph by dead ends or other criteria so that distances are not distorted.
+
+        Parameters
+        ----------
+        region : string
+            The name of the region to get from OSM
+
+        Returns
+        -------
+        G : networkx multidigraph
+        """
+        try:
+            G = ox.graph_from_place(self.name, network_type="drive")
+            return G
+        except:
+            print(f"OSM could not find '{self.name}'.")
+            print("Please try again with a different region.")
+
+    def _normalize_elevation(self):
+        """Calculates the altitude index of a graph based on the altitude of the nodes.
+
+        Parameters
+        ----------
+        G : networkx multidigraph
+            The graph to calculate the index
+        google_key : string
+            The key to use the Google Elevation API
+
+        Returns
+        -------
+        normalized_elevation : one-dimensional data structure
+            The elevation data prepared to be compared and analized
+        """
+        # Obtain the elevation of all nodes
+        try:
+            self.G_elevation = ox.elevation.add_node_elevations_google(
+                self.G, api_key=self.google_api_key
+            )
+            self.G_elevation = ox.elevation.add_edge_grades(self.G)
+            self.nc = ox.plot.get_node_colors_by_attr(
+                self.G, "elevation", cmap="plasma"
+            )
+
+        except ImportError:
+            print("You need a google_elevation_api_key to run this cell.")
+
+        gdf = ox.graph_to_gdfs(self.G)
+
+        # Get and normalize the elevation data
+        elevation = gdf[0]["elevation"]
+        elevation_mean = np.mean(elevation)
+        normalized_elevations = elevation - elevation_mean
+
+        return normalized_elevations, elevation_mean
+
+    def _altitude_index(self):
+        index = self._normalize_elevation()
+        return index
+
+    def _distance_index(self):
         """
         Get the index related to distances.
 
@@ -227,11 +243,11 @@ class Region:
                     if (
                         route is not None
                     ):  # Si la ruta existe se obtiene la distancia de esa ruta
-
                         dist = round(
                             sum(
-                                ox.utils_graph.route_to_gdf(
-                                    G, route, "length")["length"]
+                                ox.utils_graph.route_to_gdf(G, route, "length")[
+                                    "length"
+                                ]
                             )
                         )  # Se redondea para obtener número de metros
                         shortestdistance1.append(dist)
@@ -284,8 +300,7 @@ class Region:
                     dest_x = data["x"]
                     dest = ox.distance.nearest_nodes(G, X=dest_y, Y=dest_x)
                     dist2 = round(
-                        ox.distance.great_circle_vec(
-                            orig_y, orig_x, dest_y, dest_x)
+                        ox.distance.great_circle_vec(orig_y, orig_x, dest_y, dest_x)
                     )
                     # print(dist2)
                     shortestcrowdistance1.append(dist2)
@@ -310,8 +325,7 @@ class Region:
             -------
             dist_result : matrix with the results of the division
             """
-            dist_result = np.nan_to_num(
-                np.divide(matrix1, matrix2, where=matrix2 != 0))
+            dist_result = np.nan_to_num(np.divide(matrix1, matrix2, where=matrix2 != 0))
 
             return dist_result
 
@@ -348,8 +362,7 @@ class Region:
             -------
             secondindex : Mean of all values in a list.
             """
-            secondindex = np.mean(
-                average_matrix)  # Obtención del segundo índice
+            secondindex = np.mean(average_matrix)  # Obtención del segundo índice
 
             return secondindex
 

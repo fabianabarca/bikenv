@@ -34,12 +34,12 @@ print(distance_index)
 # With OOP:
 
 # Create a region object
-tibas = bikenv.Region("Cinco Esquinas de Tibás, San Joséss, Costa Rica", google_key=GOOGLE_API_KEY)
+tibas = bikenv.Region("Cinco Esquinas de Tibás, San José, Costa Rica", google_key=GOOGLE_API_KEY)
 print("This is the graph of the region of interest.")
 print(f"Object: {type(tibas)}.")
 
 # Get the indexes of the region of interest
-print(tibas.normalized_elevation)
+print(tibas.normalized_elevations)
 print(tibas.distance_index)
 tibas.plot_region()
 tibas.plot_elevation()

@@ -9,19 +9,24 @@ import numpy as np
 from scipy import stats
 import osmnx as ox
 import matplotlib.pyplot as plt
+from osmnx._errors import *
+import geopandas as gpd
 
 
 # TODO: class Region with attributes: name, graph, altitude_index, distance_index, and methods: normalized_elevation_stats, normalized_elevation_hist
 
 
 class Region:
-    def __init__(self, name: str, google_key: str):
-        self.name = name
+    def __init__(self, query: str, google_key: str, dist: int):
+        self._data_validation(query, google_key, dist)
+        self.query = query
         self.google_api_key = google_key
+        self.dist = dist
         self.G = self._get_region()
         self.normalized_elevations, self.elevation_mean = self._normalize_elevation()
-        self.altitude_index = self._altitude_index()
+        self.altitude_index_var, self.altitude_index_std = self._altitude_index()
         self.distance_index = self._distance_index()
+        
 
     def plot_region(self):
         """Plot the region from OSM as a graph.
@@ -38,7 +43,7 @@ class Region:
         try:
             _, _ = ox.plot_graph(self.G)
         except:
-            print(f"OSM could not find '{self.name}' graph.")
+            print(f"OSM could not find '{self.query}' graph.")
             print("Please try again with a different region.")
 
     def plot_elevation(self):
@@ -64,7 +69,7 @@ class Region:
                 edge_color="#333",
             )
         except:
-            print(f"OSM could not find '{self.name}' elevation graph.")
+            print(f"OSM could not find '{self.query}' elevation graph.")
             print("Please try again with a different region.")
 
     def elevation_stats(self):
@@ -132,6 +137,20 @@ class Region:
         except:
             print("Not able to show normalized elevation histogram")
 
+    def _data_validation(self, query, google_key, dist):
+        if isinstance(query, str) != True:
+            raise TypeError("Variable query must be a string")
+        elif len(query) == 0:
+            raise TypeError("Variable query is empty")
+        if isinstance(google_key, str) != True:
+            raise TypeError("Google Elevation API Key must be a string")
+        elif len(google_key) == 0:
+            raise TypeError("Google Elevation API Key is empty")
+        if isinstance(dist, int) != True:
+            raise TypeError("Bbox distance must be a integer")
+        elif len(google_key) == 0:
+            raise TypeError("Google Elevation API Key is empty")
+
     def _get_region(self):
         """Get the region from OSM as a graph.
 
@@ -147,12 +166,27 @@ class Region:
         G : networkx multidigraph
         """
         try:
-            G = ox.graph_from_place(self.name, network_type="drive")
+            '''gdf = ox.graph_to_gdfs(G, nodes = False, edges = True)
+            centroid = gdf.unary_union.centroid
+            print(centroid.x, centroid.y)
+            lat_center = centroid.y
+            lon_center = centroid.x
+            side_square = 200   #
+            lat_top = lat_center + (200/ 6371000) * (180 / np.pi)
+            lat_bottom = lat_center - (200 / 6371000) * (180 / np.pi)
+            lon_left = lon_center - (200 / 6371000) * (180 / np.pi) / np.cos(lat_center)
+            lon_right = lon_center + (200 / 6371000) * (180 / np.pi) / np.cos(lat_center)
+            G = ox.graph_from_bbox(lat_top, lat_bottom, lon_right, lon_left)'''
+            G = ox.graph_from_address(
+                self.query, dist=self.dist, dist_type='bbox', network_type='drive')
             return G
-        except:
-            print(f"OSM could not find '{self.name}'.")
+        except InsufficientResponseError:
+            print(f"OSM could not find '{self.query}'.")
             print("Please try again with a different region.")
-            return None
+            exit()
+        except ResponseStatusCodeError:
+            print("Server error getting networkx multidigraph")
+            exit()
 
     def _normalize_elevation(self):
         """Calculates the altitude index of a graph based on the altitude of the nodes.
@@ -169,38 +203,43 @@ class Region:
         normalized_elevation : one-dimensional data structure
             The elevation data prepared to be compared and analized
         """
+
+        # Obtain the elevation of all nodes
         try:
-            # Obtain the elevation of all nodes
-            try:
-                self.G_elevation = ox.elevation.add_node_elevations_google(
-                    self.G, api_key=self.google_api_key
-                )
-                self.G_elevation = ox.elevation.add_edge_grades(self.G)
-                self.nc = ox.plot.get_node_colors_by_attr(
-                    self.G, "elevation", cmap="plasma"
-                )
+            self.G_elevation = ox.elevation.add_node_elevations_google(
+                self.G, api_key=self.google_api_key
+            )
+            self.G_elevation = ox.elevation.add_edge_grades(self.G)
+            self.nc = ox.plot.get_node_colors_by_attr(
+                self.G, "elevation", cmap="plasma"
+            )
 
-            except:
-                if (self.G != None):
-                    print("You need a google_elevation_api_key to run this cell.")
+        except InsufficientResponseError:
+            if (self.G != None):
+                print("You need a google_elevation_api_key to run this cell.")
+                exit()
 
-            gdf = ox.graph_to_gdfs(self.G)
+        except ResponseStatusCodeError:
+            print("Server error getting node elevations")
+            exit()
 
-            # Get and normalize the elevation data
-            elevation = gdf[0]["elevation"]
-            elevation_mean = np.mean(elevation)
-            normalized_elevations = elevation - elevation_mean
+        gdf = ox.graph_to_gdfs(self.G)
 
-            return normalized_elevations, elevation_mean
-        except:
-            return None, None
+        # Get and normalize the elevation data
+        elevation = gdf[0]["elevation"]
+        elevation_mean = np.mean(elevation)
+        normalized_elevations = elevation - elevation_mean
+
+        return normalized_elevations, elevation_mean
 
     def _altitude_index(self):
         try:
-            index = self._normalize_elevation()
-            return index
+            _, index_var, index_std, _, _ = self.elevation_stats()
+            print(index_var)
+            return index_var, index_std
         except:
-            return None
+            return None, None
+        
 
     def _distance_index(self):
         """
@@ -391,6 +430,12 @@ class Region:
             dist_result = divide_matrix(road_matrix, crow_matrix)
             average_matrix = row_mean(dist_result)
             second_index = mean_of_means(average_matrix)
+            while(np.abs(second_index)>100):
+                road_matrix = shortestroad_distance(self.G)
+                crow_matrix = shortestcrow_distance(self.G)
+                dist_result = divide_matrix(road_matrix, crow_matrix)
+                average_matrix = row_mean(dist_result)
+                second_index = mean_of_means(average_matrix)
 
             return second_index
         except:

@@ -34,7 +34,7 @@ print(distance_index)
 # With OOP:
 
 # Create a region object
-tibas = bikenv.Region("Cinco Esquinas de Tibás, San José, Costa Rica", google_key=GOOGLE_API_KEY)
+tibas = bikenv.Region("Cinco Esquinas de Tibás, San José, Costa Rica", google_key=GOOGLE_API_KEY, dist=100)
 print("This is the graph of the region of interest.")
 print(f"Object: {type(tibas)}.")
 

@@ -11,6 +11,8 @@ import osmnx as ox
 import matplotlib.pyplot as plt
 from osmnx._errors import *
 import geopandas as gpd
+import sys
+import os
 
 
 # TODO: class Region with attributes: name, graph, altitude_index, distance_index, and methods: normalized_elevation_stats, normalized_elevation_hist
@@ -26,7 +28,6 @@ class Region:
         self.normalized_elevations, self.elevation_mean = self._normalize_elevation()
         self.altitude_index_var, self.altitude_index_std = self._altitude_index()
         self.distance_index = self._distance_index()
-        
 
     def plot_region(self):
         """Plot the region from OSM as a graph.
@@ -239,7 +240,6 @@ class Region:
             return index_var, index_std
         except:
             return None, None
-        
 
     def _distance_index(self):
         """
@@ -430,7 +430,7 @@ class Region:
             dist_result = divide_matrix(road_matrix, crow_matrix)
             average_matrix = row_mean(dist_result)
             second_index = mean_of_means(average_matrix)
-            while(np.abs(second_index)>100):
+            while (np.abs(second_index) > 10):
                 road_matrix = shortestroad_distance(self.G)
                 crow_matrix = shortestcrow_distance(self.G)
                 dist_result = divide_matrix(road_matrix, crow_matrix)
@@ -438,5 +438,9 @@ class Region:
                 second_index = mean_of_means(average_matrix)
 
             return second_index
-        except:
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print('Unable calculate because an error in line' +
+                  exc_tb.tb_lineno+'with type'+exc_type)
             return None

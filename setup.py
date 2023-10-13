@@ -17,12 +17,12 @@ setup(
     author='Fabián Abarca & Jose Daniel Marín & Derian Monge',
     license='MIT',
     install_requires=[
-        'numpy',
-        'scipy',
-        'pandas',
-        'geopandas',
-        'osmnx',
-        'networkx',
+        'numpy==1.25.2',
+        'scipy==1.11.2',
+        'pandas==2.0.03',
+        'geopandas==0.13.2',
+        'osmnx==1.6.0',
+        'networkx==3.1',
     ],
     classifiers=[
         'Development Status :: 1 - Planning',

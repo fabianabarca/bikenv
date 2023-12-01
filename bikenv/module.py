@@ -19,18 +19,23 @@ import os
 
 
 class Region:
-    def __init__(self, query: str, google_key: str, dist: int):
-        self._data_validation(query, google_key, dist)
+    def __init__(self, query: str, google_api_key: str, bbox_dist: int):
+        # Calls _data_validation function
+        self._data_validation(query, google_api_key, bbox_dist)
+        # Establish query google_api_key and bbox_distance attributes
         self.query = query
-        self.google_api_key = google_key
-        self.dist = dist
+        self.google_api_key = google_api_key
+        self.dist = bbox_dist
+        # Obtain region networkx multidigraph
         self.G = self._get_region()
+        # Call functions to obtain elevation and distance indexes
         self.normalized_elevations, self.elevation_mean = self._normalize_elevation()
         self.altitude_index_var, self.altitude_index_std = self._altitude_index()
         self.distance_index = self._distance_index()
 
     def plot_region(self):
-        """Plot the region from OSM as a graph.
+        """
+        Plot the region from OSM as a graph.
 
         Parameters
         ----------
@@ -48,7 +53,8 @@ class Region:
             print("Please try again with a different region.")
 
     def plot_elevation(self):
-        """Plot the region from OSM as a graph.
+        """
+        Plot the region from OSM as a graph.
 
         Parameters
         ----------
@@ -89,22 +95,23 @@ class Region:
         kurt : kurtosis of normalized elevation data
         """
         try:
-            print("Los datos obtenidos de la elevación de la ciudad son: \n")
+            print("\n")
+            print("The stats obtained from the elevation of the city are: \n")
 
             mean = self.elevation_mean
-            print("La media es:", mean)
+            print("The mean is:", mean)
 
             var = np.var(self.normalized_elevations)  # Varianza
-            print("La varianza es:", var)
+            print("The variance is:", var)
 
             std = np.std(self.normalized_elevations)
-            print("La desviación estandar es:", std)
+            print("The standard deviation is:", std)
 
             skew = stats.skew(self.normalized_elevations)
-            print("El sesgo es:", skew)
+            print("The skew is:", skew)
 
             kurt = stats.kurtosis(self.normalized_elevations)
-            print("La kurtosis es:", kurt)
+            print("The kurtosis is:", kurt)
 
             return mean, var, std, skew, kurt
         except:
@@ -139,6 +146,23 @@ class Region:
             print("Not able to show normalized elevation histogram")
 
     def _data_validation(self, query, google_key, dist):
+        """
+        Verify if parameters query, google_api_key and bbox_distance are valid.
+
+        Parameters
+        ----------
+        query : string
+            Name of the region.
+        google_key:
+            The key to use the Google Elevation API.
+        dist: 
+            Bbox distance for region.
+
+        Returns
+        -------
+        None
+
+        """
         if isinstance(query, str) != True:
             raise TypeError("Variable query must be a string")
         elif len(query) == 0:
@@ -153,31 +177,21 @@ class Region:
             raise TypeError("Google Elevation API Key is empty")
 
     def _get_region(self):
-        """Get the region from OSM as a graph.
+        """
+        Get the region from OSM as a graph.
 
         TODO: How to limit the region, for example, to a circular area of N km radius around the center of the region. This is to avoid getting a graph that is too big. Search for other options to "trim" the graph by dead ends or other criteria so that distances are not distorted.
 
         Parameters
         ----------
         region : string
-            The name of the region to get from OSM
+            The name of the region to get from OSM.
 
         Returns
         -------
-        G : networkx multidigraph
+        G : networkx multidigraph.
         """
         try:
-            '''gdf = ox.graph_to_gdfs(G, nodes = False, edges = True)
-            centroid = gdf.unary_union.centroid
-            print(centroid.x, centroid.y)
-            lat_center = centroid.y
-            lon_center = centroid.x
-            side_square = 200   #
-            lat_top = lat_center + (200/ 6371000) * (180 / np.pi)
-            lat_bottom = lat_center - (200 / 6371000) * (180 / np.pi)
-            lon_left = lon_center - (200 / 6371000) * (180 / np.pi) / np.cos(lat_center)
-            lon_right = lon_center + (200 / 6371000) * (180 / np.pi) / np.cos(lat_center)
-            G = ox.graph_from_bbox(lat_top, lat_bottom, lon_right, lon_left)'''
             G = ox.graph_from_address(
                 self.query, dist=self.dist, dist_type='bbox', network_type='drive')
             return G
@@ -190,19 +204,20 @@ class Region:
             exit()
 
     def _normalize_elevation(self):
-        """Calculates the altitude index of a graph based on the altitude of the nodes.
+        """
+        Calculates the altitude index of a graph based on the altitude of the nodes.
 
         Parameters
         ----------
         G : networkx multidigraph
-            The graph to calculate the index
-        google_key : string
-            The key to use the Google Elevation API
+            The graph to calculate the index.
+        google_api_key : string
+            The key to use the Google Elevation API.
 
         Returns
         -------
         normalized_elevation : one-dimensional data structure
-            The elevation data prepared to be compared and analized
+            The elevation data prepared to be compared and analized.
         """
 
         # Obtain the elevation of all nodes
@@ -234,6 +249,20 @@ class Region:
         return normalized_elevations, elevation_mean
 
     def _altitude_index(self):
+        """
+        Use elevation_stats to get variance and standard deviation of the elevation in the area.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        index_var : altitude index variance
+            The elevation variance for the designated region.
+        index_std : altitude index standar deviation
+            The elevation standard deviation for the designated region.
+        """
         try:
             _, index_var, index_std, _, _ = self.elevation_stats()
             print(index_var)
@@ -430,6 +459,13 @@ class Region:
             dist_result = divide_matrix(road_matrix, crow_matrix)
             average_matrix = row_mean(dist_result)
             second_index = mean_of_means(average_matrix)
+            '''
+            Verify if altitude_index is over 10.
+            If then repeat the calc til it is less than 10.
+            That is to make sure that the values don't go over a designated limit.
+            Sometimes the altitude_index takes values over 1e10.
+            Why that happen is unkown but the hypothesis is that when there is a zero division.
+            '''
             while (np.abs(second_index) > 10):
                 road_matrix = shortestroad_distance(self.G)
                 crow_matrix = shortestcrow_distance(self.G)

@@ -23,6 +23,8 @@ setup(
         'geopandas==0.13.2',
         'osmnx==1.6.0',
         'networkx==3.1',
+        'matplotlib==3.5.1',
+        'scikit-learn==1.3.0',
     ],
     classifiers=[
         'Development Status :: 1 - Planning',

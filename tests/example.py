@@ -34,22 +34,24 @@ print(distance_index)
 # With OOP:
 
 # Create a region object
-region = bikenv.Region("New York, United States of America", google_api_key=GOOGLE_API_KEY, bbox_dist=300)
+region = bikenv.Region("New York, United States of America",
+                       google_api_key=GOOGLE_API_KEY, bbox_dist=300)
 print("This is the graph of the region of interest.")
-#print(f"Object: {type(tibas)}.")
+# print(f"Object: {type(region)}.")
 
 # Get the indexes of the region of interest
 # print(region.normalized_elevations)
 print('Distance Index:')
-#print(tibas.distance_index)
+# print(region.distance_index)
 region.plot_region()
 region.plot_elevation()
 
-#print(tibas.elevation_stats())
+'''
+print(tibas.elevation_stats())
+region.normalized_elevation_hist()
+Get the stats of the altitude index (possibly must change in the future)
+region.normalized_elevation_stats()
 
-#tibas.normalized_elevation_hist()
-# Get the stats of the altitude index (possibly must change in the future)
-#tibas.normalized_elevation_stats()
-
-# Plot the histogram of the altitude index
-#tibas.normalized_elevation_hist()""
+Plot the histogram of the altitude index
+region.normalized_elevation_hist()
+'''

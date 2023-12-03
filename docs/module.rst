@@ -44,21 +44,39 @@ Use Example
 
 .. code-block:: python
 
-   import geopandas
    import bikenv
+   import keys
 
-   # Create the network multidigraph of the city
-   G = bikenv.get_region(San José, drive) 
 
-   #Calculate the index of altitude
-   # Obtain the altitud data.
-   alturas_equiv = bikenv.altitude_index(G, google_key)
+   GOOGLE_API_KEY = keys.GOOGLE_API_KEY
+   region_query = "New York, United States of America"
 
-   #Obtain the stats of the altitude
-   variances = bikenv.stats(alturas_equiv)
+   # Create a region object
+   # Get the indexes of the region of interest
+   region = bikenv.Region(query = region_query,
+                        google_api_key=GOOGLE_API_KEY, bbox_dist=300)
+   print("This is the graph of the region of interest.")
+   # Print(f"Object: {type(region)}.")
 
-   #Calculate the index of distance
-   second_index = bikenv.distance_index(G)
+   # Obtain altitude stats
+   mean, var, std, skew, kurt = region.elevation_stats()
+
+   # Print altitude index
+   print(region.elevation_mean)
+   print(region.altitude_index_var)
+   print(region.altitude_index_std)
+
+   # Print distance index
+   print(region.distance_index)
+
+   # Plot region
+   region.plot_region()
+
+   # Plot elevation
+   region.plot_elevation()
+
+   # Plot normalized elevation histogram   
+   region.normalized_elevation_hist()
 
 
 .. important::

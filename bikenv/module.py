@@ -15,9 +15,6 @@ import sys
 import os
 
 
-# TODO: class Region with attributes: name, graph, altitude_index, distance_index, and methods: normalized_elevation_stats, normalized_elevation_hist
-
-
 class Region:
     def __init__(self, query: str, google_api_key: str, bbox_dist: int):
         # Calls _data_validation function
@@ -179,8 +176,6 @@ class Region:
     def _get_region(self):
         """
         Get the region from OSM as a graph.
-
-        TODO: How to limit the region, for example, to a circular area of N km radius around the center of the region. This is to avoid getting a graph that is too big. Search for other options to "trim" the graph by dead ends or other criteria so that distances are not distorted.
 
         Parameters
         ----------

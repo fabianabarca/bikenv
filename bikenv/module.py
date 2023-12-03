@@ -93,7 +93,7 @@ class Region:
         """
         try:
             print("\n")
-            print("The stats obtained from the elevation of the city are: \n")
+            print("The stats obtained for the elevation of the city are: \n")
 
             mean = self.elevation_mean
             print("The mean is:", mean)
